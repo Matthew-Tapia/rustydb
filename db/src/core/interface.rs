@@ -1,4 +1,4 @@
-pub fn print_prompt() {
+fn print_prompt() {
     print!("db > ");
     std::io::Write::flush(&mut std::io::stdout()).expect("Failed to flush stdout");
 }

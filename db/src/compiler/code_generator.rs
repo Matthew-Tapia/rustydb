@@ -1,9 +1,11 @@
-use crate::compiler::tokenizer::tokenize;
-
 pub enum PrepareResult {
     PrepareSuccess,
     PrepareUnrecognizedStatement,
     PrepareSyntaxError,
+}
+
+pub enum MetaCommandResult {
+    MetaCommandUnrecognizedCommand,
 }
 
 pub enum StatementType {
@@ -15,34 +17,41 @@ pub struct Statement {
     pub type_: StatementType,
 }
 
-pub fn prepare_statement(input: &str, statement: &mut Statement) -> PrepareResult {
-    let tokens: Vec<String> = tokenize(input);
+pub struct CodeGenerator;
 
-    if tokens[0].to_lowercase() == "insert" {
-        if tokens.len() < 4 {
-            return PrepareResult::PrepareSyntaxError;
+impl CodeGenerator {
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    pub fn prepare_statement(&self, tokens: &[String], statement: &mut Statement) -> PrepareResult {
+        if tokens.is_empty() {
+            return PrepareResult::PrepareUnrecognizedStatement;
         }
 
-        statement.type_ = StatementType::StatementInsert;
+        match tokens[0].to_lowercase().as_str() {
+            "insert" => {
+                if tokens.len() < 4 {
+                    return PrepareResult::PrepareSyntaxError;
+                }
 
-        PrepareResult::PrepareSuccess
-    } else if input.trim().to_lowercase() == "select" {
-        statement.type_ = StatementType::StatementSelect;
-        return PrepareResult::PrepareSuccess;
-    } else {
-        return PrepareResult::PrepareUnrecognizedStatement;
+                statement.type_ = StatementType::StatementInsert;
+                PrepareResult::PrepareSuccess
+            }
+            "select" => {
+                statement.type_ = StatementType::StatementSelect;
+                PrepareResult::PrepareSuccess
+            }
+            _ => PrepareResult::PrepareUnrecognizedStatement,
+        }
     }
-}
 
-pub enum MetaCommandResult {
-    MetaCommandSuccess,
-    MetaCommandUnrecognizedCommand,
-}
-
-pub fn do_meta_command(input: &str) -> MetaCommandResult {
-    if input.trim() == ".exit" {
-        std::process::exit(0);
-    } else {
-        return MetaCommandResult::MetaCommandUnrecognizedCommand;
+    pub fn do_meta_command(&self, input: &str) -> MetaCommandResult {
+        match input.trim() {
+            ".exit" => {
+                std::process::exit(0);
+            }
+            _ => MetaCommandResult::MetaCommandUnrecognizedCommand,
+        }
     }
 }
